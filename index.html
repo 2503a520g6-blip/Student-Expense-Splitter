@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Expense Splitter | SplitMate</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts for modern clean typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js for Monthly Trend and Category Breakdown -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Header & Navigation -->
+  <header class="app-header">
+    <div class="container header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <line x1="19" y1="8" x2="19" y2="14"></line>
+            <line x1="22" y1="11" x2="16" y2="11"></line>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">SplitMate</h1>
+          <p class="brand-subtitle">Student Expense Splitter & Settlement Tracker</p>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="currency-selector">
+          <label for="currency-select" class="sr-only">Currency</label>
+          <span class="currency-icon">🌐</span>
+          <select id="currency-select" title="Change Currency">
+            <option value="₹" selected>INR (₹)</option>
+            <option value="$">USD ($)</option>
+            <option value="€">EUR (€)</option>
+            <option value="£">GBP (£)</option>
+            <option value="C$">CAD (C$)</option>
+            <option value="A$">AUD (A$)</option>
+          </select>
+        </div>
+
+        <button id="btn-load-demo" class="btn btn-outline" title="Load sample student group data">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Demo Data
+        </button>
+
+        <button id="btn-reset-all" class="btn btn-danger-outline" title="Clear all stored data">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Reset All
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="container main-content">
+
+    <!-- Welcome Hero & Overview -->
+    <section class="hero-section">
+      <div class="hero-text">
+        <h2>Smart & Fair Student Expense Splitting</h2>
+        <p>Effortlessly split shared bills among college roommates, hostel mates, and campus project groups. Track equal or custom splits, view visual spending analytics, download reports, and settle up with one click.</p>
+      </div>
+      <div class="dashboard-stats" id="dashboard-stats">
+        <div class="stat-card">
+          <div class="stat-icon icon-blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Group Spending</span>
+            <span class="stat-value" id="stat-total-spending">₹0.00</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-cyan">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Number of Students</span>
+            <span class="stat-value" id="stat-total-members">0</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-indigo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Number of Expenses</span>
+            <span class="stat-value" id="stat-total-expenses">0</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Pending Settlements</span>
+            <span class="stat-value" id="stat-pending-settlements">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Top Two Columns: Members on left, Add Expense on right -->
+    <div class="grid-2-cols">
+      
+      <!-- Card: Add & Manage Members -->
+      <section class="card" id="card-members">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">👥</span>
+            <div>
+              <h3>1. Group Members</h3>
+              <p class="card-desc">Add, edit, or remove students sharing costs</p>
+            </div>
+          </div>
+          <span class="badge badge-primary" id="members-count-badge">0 Students</span>
+        </div>
+
+        <div class="card-body">
+          <form id="form-add-member" class="form-row">
+            <div class="input-group flex-grow">
+              <input 
+                type="text" 
+                id="member-name-input" 
+                class="form-control" 
+                placeholder="Enter student name (e.g. Alex, Priya)" 
+                maxlength="30"
+                required
+              >
+            </div>
+            <button type="submit" class="btn btn-primary" id="btn-add-member">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Member
+            </button>
+          </form>
+
+          <!-- List of Added Members -->
+          <div class="members-display">
+            <div class="members-display-header">
+              <label class="section-sublabel mb-0">Current Students:</label>
+              <span class="text-hint">Click ✏️ to edit or ✕ to remove</span>
+            </div>
+            <div id="members-list" class="chips-container">
+              <!-- Dynamically populated or empty state -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Card: Add New Expense -->
+      <section class="card" id="card-add-expense">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">💸</span>
+            <div>
+              <h3>2. Add New Expense</h3>
+              <p class="card-desc">Record bills with equal or custom split amounts</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <form id="form-add-expense">
+            <div class="form-grid-2">
+              <!-- Expense Description -->
+              <div class="form-group">
+                <label for="expense-name" class="form-label">Expense Description *</label>
+                <input 
+                  type="text" 
+                  id="expense-name" 
+                  class="form-control" 
+                  placeholder="e.g. Hostel Wi-Fi, Pizza Night, Groceries" 
+                  maxlength="50"
+                  required
+                >
+              </div>
+
+              <!-- Amount -->
+              <div class="form-group">
+                <label for="expense-amount" class="form-label">Total Amount (<span class="currency-label">₹</span>) *</label>
+                <div class="input-with-prefix">
+                  <span class="input-prefix currency-label">₹</span>
+                  <input 
+                    type="number" 
+                    id="expense-amount" 
+                    class="form-control" 
+                    placeholder="0.00" 
+                    step="0.01" 
+                    min="0.01" 
+                    required
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid-3">
+              <!-- Category -->
+              <div class="form-group">
+                <label for="expense-category" class="form-label">Category</label>
+                <select id="expense-category" class="form-control">
+                  <option value="Food">🍕 Food & Dining</option>
+                  <option value="Groceries">🛒 Groceries</option>
+                  <option value="Rent">🏠 Rent & Hostel</option>
+                  <option value="Utilities">💡 Utilities & Wi-Fi</option>
+                  <option value="Travel">🚗 Travel & Cab</option>
+                  <option value="Entertainment">🎬 Entertainment</option>
+                  <option value="Study">📚 Books & Supplies</option>
+                  <option value="Other">📦 Other</option>
+                </select>
+              </div>
+
+              <!-- Date -->
+              <div class="form-group">
+                <label for="expense-date" class="form-label">Date</label>
+                <input type="date" id="expense-date" class="form-control">
+              </div>
+
+              <!-- Paid By -->
+              <div class="form-group">
+                <label for="expense-payer" class="form-label">Who Paid? *</label>
+                <select id="expense-payer" class="form-control" required>
+                  <option value="" disabled selected>Select student</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Split Method Toggle (Equal vs Custom) -->
+            <div class="form-group split-section">
+              <div class="split-header">
+                <div>
+                  <label class="form-label mb-0">Splitting Method *</label>
+                  <span class="split-help-text">Choose how costs are divided</span>
+                </div>
+                
+                <div class="split-mode-toggle" role="group" aria-label="Split Method">
+                  <button type="button" class="toggle-btn active" id="btn-split-mode-equal" data-mode="equal">
+                    <span>=</span> Equal Split
+                  </button>
+                  <button type="button" class="toggle-btn" id="btn-split-mode-custom" data-mode="custom">
+                    <span>✍️</span> Custom Amounts
+                  </button>
+                </div>
+              </div>
+
+              <!-- EQUAL SPLIT VIEW -->
+              <div id="split-view-equal" class="split-view">
+                <div class="split-sub-actions">
+                  <span class="sub-label">Select Participants:</span>
+                  <div class="split-actions">
+                    <button type="button" class="btn-text" id="btn-select-all-members">Select All</button>
+                    <span class="bullet-sep">•</span>
+                    <button type="button" class="btn-text" id="btn-clear-all-members">Deselect All</button>
+                  </div>
+                </div>
+
+                <div id="split-members-checkboxes" class="split-checkboxes-grid">
+                  <!-- Checkboxes populated dynamically -->
+                </div>
+
+                <!-- Dynamic Split Estimate Preview -->
+                <div id="split-preview" class="split-preview-banner hidden">
+                  <span class="preview-icon">ℹ️</span>
+                  <span id="split-preview-text">Each selected member pays ₹0.00</span>
+                </div>
+              </div>
+
+              <!-- CUSTOM SPLIT VIEW -->
+              <div id="split-view-custom" class="split-view hidden">
+                <div class="custom-split-header">
+                  <span class="sub-label">Enter each student's exact share:</span>
+                  <div id="custom-split-meter" class="custom-split-meter badge-neutral">
+                    Allocated: <span id="custom-allocated-amount">₹0.00</span> / <span id="custom-total-amount">₹0.00</span>
+                  </div>
+                </div>
+
+                <div id="custom-split-inputs-container" class="custom-inputs-grid">
+                  <!-- Populated dynamically with student amount inputs -->
+                </div>
+
+                <div id="custom-validation-warning" class="custom-warning-banner hidden">
+                  <span id="custom-warning-text">Allocated total must equal the expense amount.</span>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="btn-submit-expense">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"></path>
+              </svg>
+              Save & Record Expense
+            </button>
+          </form>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Middle Section: Visual Charts (Monthly Spending & Category Breakdown) -->
+    <section class="card mt-4" id="card-analytics">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-icon">📊</span>
+          <div>
+            <h3>3. Visual Spending Analytics</h3>
+            <p class="card-desc">Interactive trends and category breakdown of group expenses</p>
+          </div>
+        </div>
+        <span class="badge badge-neutral" id="charts-status-badge">Live Analytics</span>
+      </div>
+
+      <div class="card-body">
+        <div class="charts-grid">
+          <!-- Monthly Spending Bar Chart -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h4>📅 Monthly Spending Trend</h4>
+              <span class="chart-subtitle">Total group expenditures over time</span>
+            </div>
+            <div class="canvas-wrapper">
+              <canvas id="chart-monthly-spending"></canvas>
+            </div>
+          </div>
+
+          <!-- Category Breakdown Doughnut Chart -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h4>🍕 Category-wise Expenses</h4>
+              <span class="chart-subtitle">Where is the money going?</span>
+            </div>
+            <div class="canvas-wrapper">
+              <canvas id="chart-category-breakdown"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Two Columns: Balance Summary & Smart Settlement with Settlement Action -->
+    <div class="grid-2-cols mt-4">
+
+      <!-- Card: Balance Summary -->
+      <section class="card" id="card-balances">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">⚖️</span>
+            <div>
+              <h3>4. Member Balance Summary</h3>
+              <p class="card-desc">Who spent money vs. their fair share</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div id="balances-container" class="balances-container">
+            <!-- Dynamically populated balances cards -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Card: Settlement Plan & Mark as Paid -->
+      <section class="card" id="card-settlement">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">🤝</span>
+            <div>
+              <h3>5. Smart Settlement & Clear Dues</h3>
+              <p class="card-desc">Direct transfers with 1-click "Mark as Paid" settlement</p>
+            </div>
+          </div>
+          <button id="btn-copy-settlements" class="btn btn-sm btn-outline" title="Copy settlement plan to share in WhatsApp/Group">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Plan
+          </button>
+        </div>
+
+        <div class="card-body">
+          <div id="settlement-container" class="settlement-container">
+            <!-- Dynamically populated settlement suggestions with Mark Paid buttons -->
+          </div>
+
+          <!-- Completed Payments / Settlement History -->
+          <div class="completed-settlements-section" id="completed-settlements-box">
+            <div class="completed-header">
+              <span class="section-sublabel mb-0">Recorded Settlement Payments:</span>
+              <span class="badge badge-success" id="settled-count-badge">0 Settled</span>
+            </div>
+            <div id="settled-payments-list" class="settled-payments-list">
+              <!-- Dynamically populated settled transactions -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Full Width Card: Expense History Table with Monthly Reports & CSV Export -->
+    <section class="card mt-4" id="card-history">
+      <div class="card-header history-header-wrapper">
+        <div class="card-title-group">
+          <span class="card-icon">📜</span>
+          <div>
+            <h3>6. Expense History & Monthly Reports</h3>
+            <p class="card-desc">Full log of all entered expenses with monthly reporting and CSV download</p>
+          </div>
+        </div>
+
+        <!-- Filter & Search Controls + CSV Export -->
+        <div class="history-controls">
+          <div class="search-box">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="expense-search" class="form-control" placeholder="Search expenses...">
+          </div>
+
+          <!-- Month Filter -->
+          <select id="expense-filter-month" class="form-control filter-select" title="Filter by Month">
+            <option value="ALL">All Months</option>
+          </select>
+
+          <!-- Category Filter -->
+          <select id="expense-filter-category" class="form-control filter-select" title="Filter by Category">
+            <option value="ALL">All Categories</option>
+            <option value="Food">🍕 Food & Dining</option>
+            <option value="Groceries">🛒 Groceries</option>
+            <option value="Rent">🏠 Rent & Hostel</option>
+            <option value="Utilities">💡 Utilities</option>
+            <option value="Travel">🚗 Travel</option>
+            <option value="Entertainment">🎬 Entertainment</option>
+            <option value="Study">📚 Study</option>
+            <option value="Settlement">🤝 Settlement / Paid</option>
+            <option value="Other">📦 Other</option>
+          </select>
+
+          <!-- CSV Export Button -->
+          <button id="btn-export-csv" class="btn btn-outline" title="Download all filtered expenses as a CSV file">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Dynamic Monthly Report Banner -->
+      <div id="monthly-report-banner" class="monthly-report-banner hidden">
+        <div class="report-badge-icon">📊</div>
+        <div class="report-text">
+          <strong id="report-title">Monthly Expense Report:</strong>
+          <span id="report-details">Total spending and breakdown</span>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table" id="expenses-table">
+            <thead>
+              <tr>
+                <th>Bill ID</th>
+                <th>Date</th>
+                <th>Bill Description</th>
+                <th>Category</th>
+                <th>Paid By</th>
+                <th>Split Method & Shares</th>
+                <th class="text-right">Total Amount</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-table-body">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Edit Member Modal -->
+  <div id="edit-member-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="edit-member-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 id="edit-member-title" class="modal-title">Edit Student Name</h4>
+        <button id="modal-edit-close" class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-edit-member">
+          <div class="form-group">
+            <label for="edit-member-name-input" class="form-label">Student Name *</label>
+            <input 
+              type="text" 
+              id="edit-member-name-input" 
+              class="form-control" 
+              placeholder="Enter updated name"
+              maxlength="30" 
+              required
+            >
+            <input type="hidden" id="edit-member-old-name">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-edit-cancel" class="btn btn-outline">Cancel</button>
+        <button id="modal-edit-save" class="btn btn-primary">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Bill / Expense Modal -->
+  <div id="edit-bill-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="edit-bill-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <div>
+          <h4 id="edit-bill-title" class="modal-title">Edit Individual Bill</h4>
+          <span class="card-desc" id="edit-bill-id-label">Bill ID: #BILL-</span>
+        </div>
+        <button id="modal-edit-bill-close" class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-edit-bill">
+          <input type="hidden" id="edit-bill-id">
+          
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="edit-bill-name" class="form-label">Bill Description *</label>
+              <input type="text" id="edit-bill-name" class="form-control" maxlength="50" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-bill-amount" class="form-label">Total Amount (<span class="currency-label">₹</span>) *</label>
+              <div class="input-with-prefix">
+                <span class="input-prefix currency-label">₹</span>
+                <input type="number" id="edit-bill-amount" class="form-control" step="0.01" min="0.01" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label for="edit-bill-category" class="form-label">Category</label>
+              <select id="edit-bill-category" class="form-control">
+                <option value="Food">🍕 Food & Dining</option>
+                <option value="Groceries">🛒 Groceries</option>
+                <option value="Rent">🏠 Rent & Hostel</option>
+                <option value="Utilities">💡 Utilities & Wi-Fi</option>
+                <option value="Travel">🚗 Travel & Cab</option>
+                <option value="Entertainment">🎬 Entertainment</option>
+                <option value="Study">📚 Books & Supplies</option>
+                <option value="Settlement">🤝 Settlement</option>
+                <option value="Other">📦 Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="edit-bill-date" class="form-label">Date</label>
+              <input type="date" id="edit-bill-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-bill-payer" class="form-label">Paid By *</label>
+              <select id="edit-bill-payer" class="form-control" required>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Split Mode in Edit Modal -->
+          <div class="form-group split-section mt-2">
+            <div class="split-header">
+              <label class="form-label mb-0">Split Mode:</label>
+              <div class="split-mode-toggle">
+                <button type="button" class="toggle-btn" id="btn-edit-mode-equal"><span>=</span> Equal</button>
+                <button type="button" class="toggle-btn" id="btn-edit-mode-custom"><span>✍️</span> Custom</button>
+              </div>
+            </div>
+            <div id="edit-split-equal-container" class="split-checkboxes-grid">
+              <!-- Checkboxes for equal split -->
+            </div>
+            <div id="edit-split-custom-container" class="custom-inputs-grid hidden">
+              <!-- Custom share inputs -->
+            </div>
+            <div id="edit-split-warning" class="custom-warning-banner hidden">
+              <span id="edit-warning-text">Allocated shares must equal total amount.</span>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-edit-bill-cancel" class="btn btn-outline">Cancel</button>
+        <button id="modal-edit-bill-save" class="btn btn-primary">Update Bill</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirm-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 id="modal-title" class="modal-title">Confirm Action</h4>
+        <button id="modal-btn-close" class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-message">Are you sure you want to proceed?</p>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-btn-cancel" class="btn btn-outline">Cancel</button>
+        <button id="modal-btn-confirm" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-content">
+      <p>🎓 <strong>Student Expense Splitter (SplitMate)</strong> • Built with HTML5, CSS3, Vanilla JavaScript, & Chart.js.</p>
+      <p class="footer-sub">All data is preserved locally in your browser with full offline support.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
